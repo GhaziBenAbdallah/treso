@@ -264,7 +264,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
-from database.queries_mas import get_encaissemnet_prevu, get_client_reel_encaissement
+# from database.queries_mas import get_encaissemnet_prevu, get_client_reel_encaissement
 from mesures.mesures_mas import extract_prevu_enc_month_year_data, calculate_enc_reel_type
 
 # Utility functions remain the same
