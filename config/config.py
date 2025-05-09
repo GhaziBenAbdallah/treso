@@ -15,9 +15,9 @@
 
 # SQL Server Configuration
 DB_DRIVER = 'ODBC Driver 17 for SQL Server'
-DB_SERVER = '192.168.10.216'           
-# DB_DATABASE = 'MAS'
-DB_USERNAME = 'sa'
+DB_SERVER =            
+# DB_DATABASE = 
+DB_USERNAME = 
 DB_PASSWORD = '123'
 
 
