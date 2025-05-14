@@ -10,6 +10,9 @@ import streamlit as st
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database.db_connection import get_db_connection
 db_name="MAS"
+
+
+
 @contextmanager
 def db_cursor(db_name):
     """Context manager for database connection handling"""
@@ -25,6 +28,12 @@ def db_cursor(db_name):
         if conn:
             conn.close()
 
+
+
+
+
+
+
 def execute_query_to_dataframe(query, db_name="MAS"):
     """Execute a SQL query and return results as a DataFrame"""
     with db_cursor(db_name) as cursor:
@@ -32,6 +41,12 @@ def execute_query_to_dataframe(query, db_name="MAS"):
         rows = cursor.fetchall()
         columns = [desc[0] for desc in cursor.description]
         return pd.DataFrame([tuple(row) for row in rows], columns=columns)
+    
+
+
+
+
+
 
 def get_encaissemnet_prevu():
     query = """
@@ -101,6 +116,158 @@ def get_client_reel_encaissement():
 
     """
     return execute_query_to_dataframe(query)
+
+
+
+def get_enc_dec():
+    query = """
+    SELECT
+        ISNULL(dbo.GetCours(
+            CASE
+                WHEN banque LIKE '%$%' THEN 'usd'
+                WHEN banque LIKE '%€%' THEN 'eur'
+            END,
+            date_opr,
+            'bct'
+        ), 1) AS cours,
+        *
+    FROM
+        nature_xr
+    WHERE 
+        month(date_opr)= month(getdate())
+        AND year(date_opr)= year(getdate())
+        AND type IN ('CLIENT INTERGROUPE', 'CLIENT HORS GROUPE')
+
+    """
+    return execute_query_to_dataframe(query)
+
+
+
+def get_solde_clients():
+    query = """
+    EXEC dbo.SOLDECLIENT
+    """
+    return execute_query_to_dataframe(query)
+
+
+def get_decaissement_frs():
+    query = """
+          SELECT 
+    ISNULL(dbo.GetCours(
+        CASE 
+            WHEN reg_banque LIKE '%$%' THEN 'usd' 
+            WHEN reg_banque LIKE '%€%' THEN 'eur'
+        END, 
+        ISNULL(reg_dateencaisse, Reg_DateEcheance), 
+        'bct'
+    ), 1) AS cours,
+    
+    Reg_DateEcheance AS 'date_opr',
+    ISNULL(reg_dateencaisse, Reg_DateEcheance) AS 'date_valeur',
+    
+
+	Reg_Status,
+   
+   
+    reg.Reg_Montant,reg.Reg_Devise_Cours,
+    reg_num AS 'Piece',
+    reg.Tiers_RS,
+    rp.RegParam_Libelle AS 'Nature',
+    CASE 
+        WHEN LOWER(tiers.tiers_famille) LIKE '%intergroupe%' or LOWER(tiers.tiers_famille) like'%local%' THEN 'FOURNISSEUR INTERGROUPE'
+		ELSE 'FOURNISSEUR HORS GROUPE'
+        
+    END AS Type
+FROM
+    Reglement reg
+    INNER JOIN diversys div ON reg.reg_status = div.diversys_index AND   div.DiverSys_Type = '0901' 
+    INNER JOIN regparam rp ON rp.RegParam_Code = reg.RegParam_Code and reg.Reg_TiersType='02' 
+    INNER JOIN Tiers ON tiers.tiers_code = reg.tiers_code
+    LEFT OUTER JOIN xrelevehistorique ON piece = reg_num
+        AND credit BETWEEN reg_montant_devise - 100 AND reg_montant_devise + 100
+WHERE
+    
+       month(Reg_DateEcheance) =month(getdate())
+ AND year(Reg_DateEcheance) =YEAR(getdate()) 
+	  AND
+     Reg_Status IN (3, 4, 17) 
+
+
+	
+    """
+    return execute_query_to_dataframe(query)
+
+
+def get_cnss_mas():
+    query = """
+     SELECT 
+        GRHRubVE_mois AS Mois,
+        GRHRubVE_ex AS Annee,
+        SUM( ((GRHRubV_Montant / 0.0968) * 8.535 / 100) + GRHRubV_Montant ) AS montant
+    FROM 
+        VSalaire
+    WHERE 
+        GRHRubVE_ex >= 2025
+        AND GRHRub_Code = 'CNSSSA'
+    GROUP BY 
+        GRHRubVE_mois, GRHRubVE_ex
+    ORDER BY 
+        GRHRubVE_mois;
+    """
+    return execute_query_to_dataframe(query)
+
+def get_salaire_mas():
+    query = """
+    SELECT
+        GRHRubVE_mois AS Mois,
+        GRHRubVE_ex AS Annee,
+        SUM(GRHRubV_Montant) AS montant
+    FROM 
+        VSalaire  
+    WHERE  
+        GRHRubVE_ex >= 2025
+        AND GRHRub_Code='SANET2'
+    GROUP BY 
+        GRHRubVE_mois, GRHRubVE_ex
+    ORDER BY
+        GRHRubVE_mois;
+    """
+    return execute_query_to_dataframe(query)
+
+
+
+
+def get_steg():
+    query="""
+
+
+        select doc_num,doc_date,Doc_RS,Doc_valide,doc_devise_cours,doc_tht,Doc_TTTC,Doc_THT*Doc_Devise_Cours as 'Montant' 
+        from document
+        where doc_type ='facsteg'
+        and year(doc_date)= year(getdate())
+        and month(doc_date)= month(getdate()) 
+        and day(getdate())>=day(doc_date)
+
+        """
+    return execute_query_to_dataframe(query)
+
+
+def get_sonede():
+    query="""
+
+
+        
+    select  doc_num,doc_date,Doc_RS,Doc_valide,doc_devise_cours,doc_tht,Doc_TTTC,Doc_THT*Doc_Devise_Cours as 'Montant' 
+    from document 
+    where doc_type ='fafo' and Tiers_code='FS013' 
+    and year(doc_date)= year(getdate())
+    and month(doc_date)= month(getdate()) 
+    and day(getdate())>=day(doc_date)
+
+        """
+    return execute_query_to_dataframe(query)
+
+
 
 # def get_cnss_mas():
 #     query = """

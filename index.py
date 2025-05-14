@@ -264,8 +264,8 @@
 import streamlit as st
 import pandas as pd
 import datetime
-# from database.queries_mas import get_encaissemnet_prevu, get_client_reel_encaissement
-from mesures.mesures_mas import extract_prevu_enc_month_year_data, calculate_enc_reel_type
+from database.queries_mas import get_encaissemnet_prevu, get_client_reel_encaissement,get_solde_clients,get_decaissement_frs,get_cnss_mas,get_salaire_mas,get_steg,get_sonede
+from mesures.mesures_mas import extract_prevu_enc_month_year_data, calculate_enc_reel_type,calculate_solde_client,calculate_decaissement_type,calculate_cnss_salaire_type,calculate_steg,calculate_sonede
 
 # Utility functions remain the same
 def french_type_decimal(value: float) -> str:
@@ -359,77 +359,105 @@ def tresorrerie_mas():
 
     # --------------------------- Encaissement Section --------------------------
     def display_encaissement():
-        # df_prevu_enc = get_encaissemnet_prevu()
-        df_prevu_enc=pd.read_csv("data/mas/enc_prevu_ig_hg.csv")
+        df_prevu_enc = get_encaissemnet_prevu()
+        # df_prevu_enc=pd.read_csv("data/mas/enc_prevu_ig_hg.csv")
         # df_reel_enc = get_client_reel_encaissement()
         df_reel_enc = pd.read_csv("data/mas/enc_reel_ig_hg.csv")
+        df_solde_clt=pd.read_csv("data/mas/solde_client.csv")
         prevu_ig, prevu_hg = extract_prevu_enc_month_year_data(df_prevu_enc, current_month, current_year)
+        
         reel_enc_ig = calculate_enc_reel_type(df_reel_enc, "CLIENT INTERGROUPE")
         reel_enc_hg = calculate_enc_reel_type(df_reel_enc, "CLIENT HORS GROUPE")
-
-        with st.expander(f"Encaissement | Prévu: {format_montant_fr(prevu_ig + prevu_hg)} | Réalisé: {format_montant_fr(reel_enc_ig + reel_enc_hg)}"):
+        solde_clt_ig = calculate_solde_client(df_solde_clt,"intergroupe")
+        solde_clt_hg = calculate_solde_client(df_solde_clt,"hors groupe")
+        
+        with st.expander(f"Encaissement |  Prévu: {format_montant_fr(prevu_ig + prevu_hg)} | Réalisé: {format_montant_fr(reel_enc_ig + reel_enc_hg)}"):
             with st.container():
-                cols = st.columns(5)
+                cols = st.columns(7)
                 cols[0].markdown("**Intergroupe**")
-                cols[1].markdown(f"**{format_montant_fr(prevu_ig)}**")
-                cols[2].markdown(f"**{format_montant_fr(reel_enc_ig)}**")
-                cols[3].markdown("0")  # Remarque 1
-                cols[4].markdown("0")  # Remarque 2
+                cols[1].write("   ")
+                cols[2].write("   ")
+                cols[3].markdown(f"**{format_montant_fr(prevu_ig)}**")
+                cols[4].markdown(f"**{format_montant_fr(reel_enc_ig)}**")
+                cols[5].markdown(f"**{format_montant_fr(solde_clt_ig)}**") # Remarque 1
+                cols[6].markdown("0")  # Remarque 2
 
                 cols[0].markdown("**Hors groupe**")
-                cols[1].markdown(f"**{format_montant_fr(prevu_hg)}**")
-                cols[2].markdown(f"**{format_montant_fr(reel_enc_hg)}**")
-                cols[3].markdown("0")  # Remarque 1
-                cols[4].markdown("0")  # Remarque 2
+                cols[1].write("   ")
+                cols[2].write("   ")
+                cols[3].markdown(f"**{format_montant_fr(prevu_hg)}**")
+                cols[4].markdown(f"**{format_montant_fr(reel_enc_hg)}**")
+                cols[5].markdown(f"**{format_montant_fr(solde_clt_hg)}**")  # Remarque 1
+                cols[6].markdown("0")  # Remarque 2
 
     display_encaissement()
 
     # --------------------------- Décaissement Sections -------------------------
     def display_decaissement_section(title, items):
-        # Calculate totals for the expander label
+    # Calculate totals for the expander label
         total_prevu = sum(item.get('prevu', 0) for item in items)
         total_realise = sum(item.get('realise', 0) for item in items)
 
-        with st.expander(f"{title} |           Prévu: {format_montant_fr(total_prevu)} |                 Réalisé: {format_montant_fr(total_realise)}"):
-            with st.container():
-                for item in items:
-                    cols = st.columns(5)
-                    cols[0].markdown(f"**{item['label']}**")
-                    cols[1].markdown(f"**{format_montant_fr(item.get('prevu', 0))}**")
-                    cols[2].markdown(f"**{format_montant_fr(item.get('realise', 0))}**")
-                    cols[3].markdown("0")  # Remarque 1
-                    cols[4].markdown("0")  # Remarque 2
+        with st.expander(f"{title} | Prévu: {format_montant_fr(total_prevu)} | Réalisé: {format_montant_fr(total_realise)}"):
+            for item in items:
+                cols = st.columns(7)
+                cols[0].markdown(f"**{item['label']}**")
+                cols[1].write("")  # Empty column for spacing
+                cols[2].write("")  # Empty column for spacing
+                cols[3].markdown(f"**{format_montant_fr(item.get('prevu', 0))}**")
+                cols[4].markdown(f"**{format_montant_fr(item.get('realise', 0))}**")
+                cols[5].markdown("0")  # Remarque 1
+                cols[6].markdown("0")  # Remarque 2
 
     # Define decaissement sections with sample data (replace with your actual data)
+    df_decaissement = get_decaissement_frs()
+    dec_frs_ig_ap = calculate_decaissement_type(df_decaissement, "FOURNISSEUR INTERGROUPE", [3, 4])
+    dec_frs_ig_engage = calculate_decaissement_type(df_decaissement, "FOURNISSEUR INTERGROUPE", [17])
+    dec_frs_hg_ap = calculate_decaissement_type(df_decaissement, "FOURNISSEUR HORS GROUPE", [3, 4])
+    dec_frs_hg_engage = calculate_decaissement_type(df_decaissement, "FOURNISSEUR HORS GROUPEE", [17])
+    df_cnss=get_cnss_mas()
+    cnss_a= calculate_cnss_salaire_type(df_cnss,'CNSS')
+    df_salaire=get_salaire_mas()
+    salaire= calculate_cnss_salaire_type(df_salaire,'SALAIRE') 
+    
+    df_steg=get_steg() 
+    steg_reel=calculate_steg(df_steg)
+
+    df_sonede=get_sonede()
+    sonede_reel=calculate_sonede(df_sonede)
+    print("-----------------------------------------------------------------------------")
+    print(type(steg_reel)) 
+    print(steg_reel)  # test=20
+
     decaissement_sections = [
         {
             "title": "Décaissement Fournisseur Intergroupe",
             "items": [
-                {"label": "Fournisseur Intergroupe à prévoir", "prevu": 0, "realise": 0},
-                {"label": "Fournisseur Intergroupe Engagé", "prevu": 0, "realise": 0}
+                {"label": "Fournisseur Intergroupe à prévoir", "prevu": 0, "realise": dec_frs_ig_ap},
+                {"label": "Fournisseur Intergroupe Engagé", "prevu": 0, "realise": dec_frs_ig_engage}
             ]
         },
         {
             "title": "Décaissement Fournisseur Horsgroupe",
             "items": [
-                {"label": "Fournisseur Horsgroupe à prévoir", "prevu": 0, "realise": 0},
-                {"label": "Fournisseur Horsgroupe Engagé", "prevu": 0, "realise": 0}
+                {"label": "Fournisseur Horsgroupe à prévoir", "prevu": 0, "realise": dec_frs_hg_ap},
+                {"label": "Fournisseur Horsgroupe Engagé", "prevu": 0, "realise": dec_frs_hg_engage}
             ]
         },
         {
             "title": "Décaissement Charge Fix",
             "items": [
-                {"label": "STEG", "prevu": 0, "realise": 0},
-                {"label": "SONEDE", "prevu": 0, "realise": 0},
+                {"label": "STEG", "prevu": 0, "realise": round(steg_reel)},
+                {"label": "SONEDE", "prevu": 0, "realise": round(sonede_reel)},
                 {"label": "LOCATION", "prevu": 0, "realise": 0}
             ]
         },
         {
             "title": "Salaire",
             "items": [
-                {"label": "SALAIRE NET", "prevu": 0, "realise": 0},
+                {"label": "SALAIRE NET", "prevu": 0, "realise": salaire},
                 {"label": "CNSS ECHEANCE", "prevu": 0, "realise": 0},
-                {"label": "CNSS A PREVOIR", "prevu": 0, "realise": 0}
+                {"label": "CNSS A PREVOIR", "prevu": 0, "realise": cnss_a}
             ]
         },
         {
@@ -452,29 +480,39 @@ def tresorrerie_mas():
     # --------------------------- Summary Section -------------------------------
     with st.container(border=True):
         
-        cols = st.columns(5)
+        cols = st.columns(7)
         cols[0].markdown("**Augmentation / Diminition de la trésorerie**")
         cols[0].markdown("**Trésorerir début du Mois**")
         cols[0].markdown("**Trésorerir Fin du Mois**")
         cols[0].markdown("""**Augmentation / Diminition de la trésorerie**""")
 
-
-        cols[1].markdown("**0**") 
-        cols[1].markdown("**0**")
-        cols[1].markdown("**0**")
-        cols[1].markdown("**0**")                             # Prévu
-        cols[2].markdown("**0**")
-        cols[2].markdown("**0**") 
-        cols[2].markdown("**0**")
-        cols[2].markdown("**0**") # Réalisé
-        cols[3].markdown("0")  
-        cols[3].markdown("0") 
-        cols[3].markdown("0") 
-        cols[3].markdown("0")     # Remarque 1
-        cols[4].markdown("0")   
-        cols[4].markdown("0")
-        cols[4].markdown("0")
-        cols[4].markdown("0")   # Remarque 2
+        # Prévu
+        cols[1].write(" ") 
+        cols[1].markdown(" ")
+        cols[1].markdown(" ")
+        cols[1].markdown(" ") 
+        cols[2].write(" ") 
+        cols[2].markdown(" ")
+        cols[2].markdown(" ")
+        cols[2].markdown(" ")  
+        # space 
+        cols[3].markdown("**0**")
+        cols[3].markdown("**0**")
+        cols[3].markdown("**0**") 
+        cols[3].markdown("**0**")
+        # Réalisé                             
+        cols[4].markdown("**0**")
+        cols[4].markdown("**0**") 
+        cols[4].markdown("**0**")
+        cols[4].markdown("**0**") 
+        cols[5].markdown("0")  
+        cols[5].markdown("0") 
+        cols[5].markdown("0") 
+        cols[5].markdown("0")     # Remarque 1
+        cols[6].markdown("0")   
+        cols[6].markdown("0")
+        cols[6].markdown("0")
+        cols[6].markdown("0")   # Remarque 2
 
 if __name__ == "__main__":
     tresorrerie_mas()

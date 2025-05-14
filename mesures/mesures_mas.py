@@ -61,7 +61,10 @@ def french_type_decimal(value: float) -> str:
 #     return abs(calcul)
 
 
-# def calculate_decaissement_type_percentage(MAS: pd.DataFrame, type_str: str, start_date=None, end_date=None) -> float:
+# def calculate_decaissement_type_percentage(MAS: pd
+# 
+# 
+# .DataFrame, type_str: str, start_date=None, end_date=None) -> float:
 #     total = calculate_decaissement_mesures(MAS, start_date, end_date)
 #     type_amount = calculate_decaissement_type(MAS, type_str, start_date, end_date)
 #     if total == 0:
@@ -109,57 +112,57 @@ def french_type_decimal(value: float) -> str:
 
 
 
-# def calculate_cumul_decaissement_year(MAS: pd.DataFrame) -> float:
+def calculate_cumul_decaissement_year(MAS: pd.DataFrame) -> float:
     
-#     # Get current year dates
-#     current_year = datetime.today().year
-#     start_date = datetime(current_year, 1, 1)
-#     end_date = datetime(current_year, 12, 31)
+    # Get current year dates
+    current_year = datetime.today().year
+    start_date = datetime(current_year, 1, 1)
+    end_date = datetime(current_year, 12, 31)
     
-#     # Filter for current year
-#     MAS['date_opr'] = pd.to_datetime(MAS['date_opr'], errors='coerce')
-#     yearly_data = MAS[
-#         (MAS['date_opr'] >= start_date) & 
-#         (MAS['date_opr'] <= end_date)
-#     ]
+    # Filter for current year
+    MAS['date_opr'] = pd.to_datetime(MAS['date_opr'], errors='coerce')
+    yearly_data = MAS[
+        (MAS['date_opr'] >= start_date) & 
+        (MAS['date_opr'] <= end_date)
+    ]
     
-#     # Calculate sum of (Credit * cours)
-#     cumul = (yearly_data['Debit'] * yearly_data['cours']).sum()
     
-#     return abs(cumul)
+    cumul = (yearly_data['Debit'] * yearly_data['cours']).sum()
+    
+    return abs(cumul)
 
 
-# def calculate_cumul_decaissement_year_type(MAS: pd.DataFrame, type_str: str = None) -> float:
-#     """
-#     Calculate yearly cumulative encaissement, optionally filtered by type
+def calculate_cumul_decaissement_year_type(MAS: pd.DataFrame, type_str: str = None) -> float:
+    """
+    Calculate yearly cumulative encaissement, optionally filtered by type
     
-#     Args:
-#         MAS: DataFrame containing financial data
-#         type_str: Optional type filter (e.g., 'EXPLOITATION')
+    Args:
+        MAS: DataFrame containing financial data
+        type_str: Optional type filter (e.g., 'EXPLOITATION')
     
-#     Returns:
-#         float: Absolute sum of (Credit * cours) for the current year
-#     """
-#     current_year = datetime.today().year
-#     start_date = datetime(current_year, 1, 1)
-#     end_date = datetime(current_year, 12, 31)
+    Returns:
+        float: Absolute sum of (Credit * cours) for the current year
+    """
+    current_year = datetime.today().year
+    start_date = datetime(current_year, 1, 1)
+    end_date = datetime(current_year, 12, 31)
     
-#     MAS['date_opr'] = pd.to_datetime(MAS['date_opr'], errors='coerce')
+    MAS['date_opr'] = pd.to_datetime(MAS['date_opr'], errors='coerce')
     
-#     # Base filter for date range
-#     mask = (
-#         (MAS['date_opr'] >= start_date) & 
-#         (MAS['date_opr'] <= end_date)
-#     )
+    # Base filter for date range
+    mask = (
+        (MAS['date_opr'] >= start_date) & 
+        (MAS['date_opr'] <= end_date)
+    )
     
-#     # Add type filter if specified
-#     if type_str:
-#         mask &= (MAS['Type'] == type_str)
+    # Add type filter if specified
+    if type_str:
+        mask &= (MAS['Type'] == type_str)
     
-#     filtered_df = MAS[mask]
-#     cumul = (filtered_df['Debit'] * filtered_df['cours']).sum()
+    filtered_df = MAS[mask]
+    cumul = (filtered_df['Debit'] * filtered_df['cours']).sum()
     
-#     return abs(cumul)
+    return abs(cumul)
 
 # Function to extract specific columns for a given month and year
 def extract_prevu_enc_month_year_data(df: pd.DataFrame, month: int, year: int) -> pd.DataFrame:
@@ -206,6 +209,96 @@ def calculate_enc_reel_type(MAS: pd.DataFrame, type_str: str) -> float:
     calcul = (filtered_df['Credit'] * filtered_df['cours']).sum()
     
     return abs(calcul)
+
+
+
+def calculate_decaissement_type(MAS: pd.DataFrame, type_str: str, status: list) -> float:
+    MAS['date_opr'] = pd.to_datetime(MAS['date_opr'], errors='coerce')
+    
+    # Save for debugging/inspection
+    MAS.to_csv(f"data/mas/dec_reel__frs_{type_str}.csv", index=False)
+
+    filtered_df = MAS[
+        (MAS['Type'] == type_str) &
+        (MAS['Reg_Status'].isin(status))
+    ]
+
+    
+
+    calcul = (filtered_df['Reg_Montant'] * filtered_df['Reg_Devise_Cours']).sum()
+    print(f"calccccuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuul {type_str} : {calcul}")
+    return abs(calcul)
+
+
+def calculate_cnss_salaire_type(MAS: pd.DataFrame, type_str: str) -> float:
+    
+    
+    # Save for debugging/inspection
+    MAS.to_csv(f"data/mas/dec_reel__frs_{type_str}.csv", index=False)
+
+    
+
+    
+
+    calcul = (MAS['montant']).sum()
+  
+    return abs(calcul)
+
+
+
+def calculate_steg(df):
+    calcul=df["Montant"].sum()
+    return(calcul)
+
+
+def calculate_sonede(df):
+    calcul=df["Montant"].sum()
+    return(calcul)
+
+
+
+
+def calculate_solde_client(df ,type_str:str):
+    print(df.columns)
+    print("exxxxxxxxxxxxxxxxxxxxxiiiiiiiiiiiiiiiiiissssssssssssssssssttttttttttttttteeeeeeeeeeeeeee")
+    print(df["Tiers_Famille"])
+    df['Tiers_Famille'] = df['Tiers_Famille'].where(df['Tiers_Famille'] == 'intergroupe', 'hors groupe')
+    
+    df = df[
+       
+        (df['Tiers_Famille'] == type_str)
+    ]
+    df.to_csv("data/mas/solde_client.csv")
+    # List of columns to sum
+    columns = [
+        'Solde03', 'SOLDERG03', 'Solde06', 'SOLDERG06', 
+        'Solde12', 'SOLDERG12', 'SOLDERGAc', 'SoldeAc',
+        'IMPACC', 'IMP03', 'IMP06', 'IMP12', 'debit_credit'
+    ]
+    
+    # Check for missing columns
+    missing_columns = [col for col in columns if col not in df.columns]
+    if missing_columns:
+        print(f"Warning: The following columns are missing from the DataFrame: {missing_columns}")
+        # Proceed with available columns
+    
+    # Filter available columns
+    available_columns = [col for col in columns if col in df.columns]
+    
+    if not available_columns:
+        print("Error: No specified columns found in the DataFrame.")
+        return None
+    
+    try:
+        # Sum each column across all rows and then sum the results
+        total = sum(df[col].sum() for col in available_columns)
+        return total
+    except Exception as e:
+        print(f"Error calculating sum: {e}")
+        return None
+
+
+
 
 # def calculate_enc_reel_type(MAS: pd.DataFrame, type_str: str, month: int, year: int) -> float:
 #     MAS['date_opr'] = pd.to_datetime(MAS['date_opr'], errors='coerce')
