@@ -247,12 +247,16 @@ def calculate_cnss_salaire_type(MAS: pd.DataFrame, type_str: str) -> float:
 
 
 def calculate_steg(df):
+    df.to_csv("data/mas/dec_reel_STEG.csv")
     calcul=df["Montant"].sum()
+
     return(calcul)
 
 
 def calculate_sonede(df):
+    
     calcul=df["Montant"].sum()
+    df.to_csv("data/mas/dec_reel_SONEDE.csv")
     return(calcul)
 
 
