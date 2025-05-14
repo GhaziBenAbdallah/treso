@@ -410,14 +410,15 @@ def tresorrerie_mas():
                 cols[6].markdown("0")  # Remarque 2
 
     # Define decaissement sections with sample data (replace with your actual data)
-    df_decaissement = get_decaissement_frs()
-    dec_frs_ig_ap = calculate_decaissement_type(df_decaissement, "FOURNISSEUR INTERGROUPE", [3, 4])
-    dec_frs_ig_engage = calculate_decaissement_type(df_decaissement, "FOURNISSEUR INTERGROUPE", [17])
-    dec_frs_hg_ap = calculate_decaissement_type(df_decaissement, "FOURNISSEUR HORS GROUPE", [3, 4])
-    dec_frs_hg_engage = calculate_decaissement_type(df_decaissement, "FOURNISSEUR HORS GROUPEE", [17])
-    df_cnss=get_cnss_mas()
+    df_decaissement_ig = pd.read_csv("data/mas/dec_reel__frs_FOURNISSEUR INTERGROUPE.csv")
+    df_decaissement_hg=pd.read_csv("data/mas/dec_reel__frs_CLIENT HORS GROUPE.csv")
+    dec_frs_ig_ap = calculate_decaissement_type(df_decaissement_ig, "FOURNISSEUR INTERGROUPE", [3, 4])
+    dec_frs_ig_engage = calculate_decaissement_type(df_decaissement_ig, "FOURNISSEUR INTERGROUPE", [17])
+    dec_frs_hg_ap = calculate_decaissement_type(df_decaissement_hg, "FOURNISSEUR HORS GROUPE", [3, 4])
+    dec_frs_hg_engage = calculate_decaissement_type(df_decaissement_hg, "FOURNISSEUR HORS GROUPEE", [17])
+    df_cnss=pd.read_csv("data/mas/dec_reel__frs_CNSS.csv")
     cnss_a= calculate_cnss_salaire_type(df_cnss,'CNSS')
-    df_salaire=get_salaire_mas()
+    df_salaire=pd.read_csv("data/mas/dec_reel__frs_SALAIRE.csv")
     salaire= calculate_cnss_salaire_type(df_salaire,'SALAIRE') 
     
     df_steg=get_steg() 
