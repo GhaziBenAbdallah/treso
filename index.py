@@ -97,8 +97,8 @@ def tresorrerie_mas():
 
     # --------------------------- Encaissement Section --------------------------
     def display_encaissement():
-        df_prevu_enc = get_encaissemnet_prevu()
-        # df_prevu_enc=pd.read_csv("data/mas/enc_prevu_ig_hg.csv")
+        # df_prevu_enc = get_encaissemnet_prevu()
+        df_prevu_enc=pd.read_csv("data/mas/enc_prevu_ig_hg.csv")
         # df_reel_enc = get_client_reel_encaissement()
         df_reel_enc = pd.read_csv("data/mas/enc_reel_ig_hg.csv")
         df_solde_clt=pd.read_csv("data/mas/solde_client.csv")
